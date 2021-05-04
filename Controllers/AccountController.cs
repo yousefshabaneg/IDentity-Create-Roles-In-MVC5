@@ -17,9 +17,11 @@ namespace IDentity.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+        private ApplicationDbContext dbContext;
 
         public AccountController()
         {
+            dbContext = new ApplicationDbContext();
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
@@ -139,6 +141,7 @@ namespace IDentity.Controllers
         [AllowAnonymous]
         public ActionResult Register()
         {
+            ViewBag.Roles = new SelectList(dbContext.Roles.Where(x=>x.Name != "Admins").ToList(), "Name", "Name");
             return View();
         }
 
@@ -151,7 +154,7 @@ namespace IDentity.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email};
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -162,9 +165,10 @@ namespace IDentity.Controllers
                     // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
                     // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
                     // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-
+                    await this.UserManager.AddToRoleAsync(user.Id, model.Roles);
                     return RedirectToAction("Index", "Home");
                 }
+                ViewBag.Roles = new SelectList(dbContext.Roles.Where(x => x.Name != "Admins").ToList(), "Name", "Name");
                 AddErrors(result);
             }
 
