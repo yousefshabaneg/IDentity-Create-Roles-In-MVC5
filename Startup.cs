@@ -15,8 +15,26 @@ namespace IDentity
         {
             ConfigureAuth(app);
             CreateRoles();
+            CreateUsers();
         }
 
+        //note  Defined Some Users To store in AspNetUsers.
+        public void CreateUsers()
+        {
+            var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(dbContext));
+
+            ApplicationUser user = new ApplicationUser();
+
+            user.Email = "admin@vidly.com";
+            user.UserName = "admin@vidly.com";
+            var check = userManager.Create(user, "Password*");
+            if (check.Succeeded)
+                userManager.AddToRole(user.Id, "Admins");
+        }
+
+
+
+        //note Create Some Roles To store in AspNetRoles.
         public void CreateRoles()
         {
             var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(dbContext));
